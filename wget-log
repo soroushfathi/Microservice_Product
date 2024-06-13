@@ -1,0 +1,4 @@
+--2024-06-13 21:00:36--  https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+Resolving raw.github.com (raw.github.com)... 185.199.109.133, 185.199.108.133, 185.199.110.133, ...
+Connecting to raw.github.com (raw.github.com)|185.199.109.133|:443... connected.
+Unable to establish SSL connection.
