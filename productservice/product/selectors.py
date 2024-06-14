@@ -1,6 +1,11 @@
 from .models import Product
+from .cache import (
+    get_cached_product, set_cached_product
+)
 from django.core.exceptions import ObjectDoesNotExist
+import logging
 
+logger = logging.getLogger(__name__)
 
 def get_all_products():
     return Product.objects.all()
@@ -8,8 +13,11 @@ def get_all_products():
 
 def get_product_by_id(product_id):
     try:
-        return Product.objects.get(id=product_id)
-    except ObjectDoesNotExist:
+        product = Product.objects.get(id=product_id)
+        set_cached_product(product_id, product)
+        logger.info("Get {product} product detail from db and set the cache.")
+        return product
+    except Product.DoesNotExist:
         return None
 
 
