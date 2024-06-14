@@ -3,11 +3,16 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from drf_spectacular.utils import OpenApiExample, extend_schema
-from .selectors import get_all_products, get_product_by_id, delete_product
-from .serializers import ProductSerializer, CreateProductSerializer, UpdateProductSerializer
-from .services import create_product, update_product, delete_product as delete_product_service
+from .logic import get_product_by_id
+from .selectors import delete_product, get_all_products
+from .services import update_product, delete_product as delete_product_service, create_product
+from .serializers import ProductSerializer, UpdateProductSerializer, CreateProductSerializer
 from .utils import format_response
+from .cache import get_cached_product_list, set_cached_product_list
+from drf_spectacular.utils import extend_schema, OpenApiExample
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ProductListAPIView(APIView):
@@ -16,11 +21,20 @@ class ProductListAPIView(APIView):
 
     def get(self, request):
         try:
+            cached_products = get_cached_product_list()
+            if cached_products:
+                logger.info(f"Fetch {len(cached_products)} from cached.")
+                response_data = format_response(success=True, data=cached_products)
+                return Response(response_data, status=status.HTTP_200_OK)
+
             products = get_all_products()
+            logger.info(f"Fetch {len(products)} products from db.")
             serializer = ProductSerializer(products, many=True)
+            set_cached_product_list(serializer.data)
             response_data = format_response(success=True, data=serializer.data)
             return Response(response_data, status=status.HTTP_200_OK)
         except Exception as e:
+            logger.error("Exception in Fetching products list: %s" % (e))
             response_data = format_response(success=False, message=str(e), error_code=500)
             return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -39,6 +53,7 @@ class ProductDetailAPIView(APIView):
             response_data = format_response(success=True, data=serializer.data)
             return Response(response_data, status=status.HTTP_200_OK)
         except Exception as e:
+            logger.error("Exception in Get product Detail: %s" % (e))
             response_data = format_response(success=False, message=str(e), error_code=500)
             return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -98,8 +113,8 @@ class ProductCreateAPIView(APIView):
             OpenApiExample(
                 'Example input',
                 value={
-                    'name': 'Sample Product',
-                    'description': 'This is a sample product description.',
+                    'name': 'New Product',
+                    'description': 'Product description.',
                     'price': '19.99',
                     'stock': 100
                 }
