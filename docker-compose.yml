@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3.3"
 
 services:
   db:
@@ -10,6 +10,8 @@ services:
       - POSTGRES_DB=productservice
       - POSTGRES_USER=puser
       - POSTGRES_PASSWORD=ppasssword
+    volumes:
+      - postgres-data:/var/lib/postgersql/data/
 
   rabbitmq:
     image: "rabbitmq:alpine"
@@ -20,6 +22,14 @@ services:
       timeout: 30s
       retries: 3
 
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
+ 
   django:
     build:
       context: .
@@ -36,38 +46,9 @@ services:
     depends_on:
       - db
       - rabbitmq
+      - redis
     restart: on-failure
 
-  celery:
-    build:
-      context: .
-      dockerfile: docker/production.Dockerfile
-    # command: celery -A productservice.tasks worker -l info --without-gossip --without-mingle --without-heartbeat
-    container_name: worker
-    command: ./docker/celery_entrypoint.sh
-    environment:
-      - DATABASE_URL=psql://puser:ppasssword@db:5432/productservice
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
-    volumes:
-      - .:/app
-    depends_on:
-      - db
-      - rabbitmq
-    restart: on-failure
-
-  beats:
-    build:
-      context: .
-      dockerfile: docker/production.Dockerfile
-    # command: celery -A productservice.tasks beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
-    container_name: beats
-    command: ./docker/beats_entrypoint.sh
-    environment:
-      - DATABASE_URL=psql://puser:ppasssword@db:5432/productservice
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
-    volumes:
-      - .:/app
-    depends_on:
-      - db
-      - rabbitmq
-    restart: on-failure
+volumes:
+    postgres-data:
+    redis-data:
