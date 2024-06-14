@@ -14,8 +14,6 @@ def get_all_products():
 def get_product_by_id(product_id):
     try:
         product = Product.objects.get(id=product_id)
-        set_cached_product(product_id, product)
-        logger.info("Get {product} product detail from db and set the cache.")
         return product
     except Product.DoesNotExist:
         return None

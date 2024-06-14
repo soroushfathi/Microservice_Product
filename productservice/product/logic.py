@@ -14,4 +14,12 @@ def get_product_by_id(product_id):
         logger.info(f"Get {cache_product} product detail from cache")
         return cache_product
 
-    return get_product_by_id_selector(product_id)
+    prodcut = get_product_by_id_selector(product_id)
+
+    if not product:
+        return None
+
+    logger.info("Get {product} product detail from db and set the cache.")
+    set_cached_product(product_id, product)
+
+    return product
