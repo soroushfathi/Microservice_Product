@@ -3,9 +3,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .logic import get_product_by_id
+from .logic import (
+    get_product_by_id, create_product
+)
 from .selectors import delete_product, get_all_products
-from .services import update_product, delete_product as delete_product_service, create_product
+from .services import update_product, delete_product as delete_product_service
 from .serializers import ProductSerializer, UpdateProductSerializer, CreateProductSerializer
 from .utils import format_response
 from .cache import get_cached_product_list, set_cached_product_list
@@ -129,6 +131,7 @@ class ProductCreateAPIView(APIView):
                 response_data = format_response(success=True, data=ProductSerializer(product).data)
                 return Response(response_data, status=status.HTTP_201_CREATED)
             except Exception as e:
+                logger.error("Exception on creating Product: %s" % (e))
                 response_data = format_response(success=False, message=str(e), error_code=500)
                 return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         response_data = format_response(success=False, message='Invalid data', data=serializer.errors, error_code=400)
