@@ -19,7 +19,7 @@ def get_product_by_id(product_id):
         logger.info(f"Get {cache_product} product detail from cache")
         return cache_product
 
-    prodcut = get_product_by_id_selector(product_id)
+    product = get_product_by_id_selector(product_id)
 
     if not product:
         return None
