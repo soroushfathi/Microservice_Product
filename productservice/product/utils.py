@@ -15,5 +15,4 @@ def format_response(
         'error_code': error_code,
         'metadata': metadata
     }
-    # Remove keys with None values for a cleaner response
     return {k: v for k, v in response.items() if v is not None}
